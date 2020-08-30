@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'sendbird_model.dart';
 import 'sendbird_channel.dart';
+import 'dart:async';
+import 'package:focus_detector/focus_detector.dart';
 
 class OpenChannelSelectionPage extends StatefulWidget {
   @override
@@ -10,27 +12,48 @@ class OpenChannelSelectionPage extends StatefulWidget {
 
 class OpenChannelState extends State {
   TextEditingController _textFieldController = TextEditingController();
+  Timer timer;
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    timer.cancel();
+  }
 
   @override
   Widget build(BuildContext context) {
     final _sendbird = Provider.of<SendbirdModel>(context, listen: true);
+    final _resumeDetectorKey = UniqueKey();
 
-    return Scaffold(
-      appBar: AppBar(title: Text("Select an Open Group")),
-      body: ListView.builder(
-          padding: const EdgeInsets.all(8),
-          itemCount: _sendbird.channels().length,
-          itemBuilder: (BuildContext context, int index) {
-            SendbirdChannel channel = _sendbird.channels()[index];
-            return Column(
-              children: [_row(context, channel, _sendbird)],
-            );
-          }),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            _displayDialog(context, _sendbird);
-          },
-          child: Icon(Icons.add)),
+    return FocusDetector(
+      key: _resumeDetectorKey,
+      onFocusGained: () {
+        timer = new Timer.periodic(Duration(seconds: 5), (timer) {
+          _sendbird.refreshOpenChannels();
+        });
+      },
+      onFocusLost: () {
+        timer.cancel();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+            title: Text("${_sendbird.currentUser.nickname}'s Open Groups")),
+        body: ListView.builder(
+            padding: const EdgeInsets.all(8),
+            itemCount: _sendbird.channels().length,
+            itemBuilder: (BuildContext context, int index) {
+              SendbirdChannel channel = _sendbird.channels()[index];
+              return Column(
+                children: [_row(context, channel, _sendbird)],
+              );
+            }),
+        floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              _displayDialog(context, _sendbird);
+            },
+            child: Icon(Icons.add)),
+      ),
     );
   }
 

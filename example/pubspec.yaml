@@ -12,6 +12,7 @@ dependencies:
   flutter:
     sdk: flutter
   flutter_dotenv: ^2.1.0
+  focus_detector: ^1.0.3
   provider: ^4.0.2
   dash_chat: ^1.1.14
 

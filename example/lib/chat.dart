@@ -4,6 +4,8 @@ import 'package:provider/provider.dart';
 import 'sendbird_model.dart';
 import 'sendbird_message.dart';
 import 'sendbird_user.dart';
+import 'dart:async';
+import 'package:focus_detector/focus_detector.dart';
 
 class ChatPage extends StatefulWidget {
   @override
@@ -11,32 +13,51 @@ class ChatPage extends StatefulWidget {
 }
 
 class ChatState extends State {
+  Timer timer;
+
+  @override
+  void dispose() {
+    super.dispose();
+    timer.cancel();
+  }
+
   @override
   Widget build(BuildContext context) {
     final _sendbird = Provider.of<SendbirdModel>(context, listen: true);
-    return Scaffold(
-      appBar: AppBar(
-        title: Text("Chat App"),
-      ),
-      body: new DashChat(
-        showUserAvatar: true,
-        onPressAvatar: (ChatUser user) {
-          print("OnPressAvatar: ${user.name}");
-        },
-        key: Key(_sendbird.channel().channelUrl.toString()),
-        onSend: (ChatMessage message) async {
-          print('chat.dart: message to send: $message');
-          setState(() {
-            _sendbird.sendOpenChannelMessage(message.text);
-          });
-        },
-        sendOnEnter: true,
-        textInputAction: TextInputAction.send,
-        // messages: this.messages,
-        messages: asDashChatMessages(_sendbird.messages()),
-        user: asDashChatUser(_sendbird.user()),
-        inputDecoration:
-            InputDecoration.collapsed(hintText: "Add message here..."),
+    final _resumeDetectorKey = UniqueKey();
+
+    return FocusDetector(
+      key: _resumeDetectorKey,
+      onFocusGained: () {
+        timer = new Timer.periodic(Duration(seconds: 1), (timer) {
+          _sendbird.refreshOpenChannelMessages();
+        });
+      },
+      onFocusLost: () {
+        timer.cancel();
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: Text("${_sendbird.currentChannel.name}"),
+        ),
+        body: new DashChat(
+          showUserAvatar: true,
+          onPressAvatar: (ChatUser user) {
+            print("OnPressAvatar: ${user.name}");
+          },
+          key: Key(_sendbird.channel().channelUrl.toString()),
+          onSend: (ChatMessage message) async {
+            setState(() {
+              _sendbird.sendOpenChannelMessage(message.text);
+            });
+          },
+          sendOnEnter: true,
+          textInputAction: TextInputAction.send,
+          messages: asDashChatMessages(_sendbird.messages()),
+          user: asDashChatUser(_sendbird.user()),
+          inputDecoration:
+              InputDecoration.collapsed(hintText: "Add message here..."),
+        ),
       ),
     );
   }

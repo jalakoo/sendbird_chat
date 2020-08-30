@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'sendbird_user.dart';
 import 'sendbird_model.dart';
+import 'dart:async';
+import 'package:focus_detector/focus_detector.dart';
 
 class UserSelectionPage extends StatefulWidget {
   @override
@@ -9,29 +11,47 @@ class UserSelectionPage extends StatefulWidget {
 }
 
 class UserSelectionState extends State {
-// class UserSelectionPage extends StatelessWidget {
   TextEditingController _textFieldController = TextEditingController();
+  Timer timer;
+
+  @override
+  void dispose() {
+    super.dispose();
+    timer.cancel();
+  }
 
   @override
   Widget build(BuildContext context) {
     final _sendbird = Provider.of<SendbirdModel>(context, listen: true);
+    final _resumeDetectorKey = UniqueKey();
 
-    return Scaffold(
-      appBar: AppBar(title: Text("Select a User")),
-      body: ListView.builder(
-          padding: const EdgeInsets.all(8),
-          itemCount: _sendbird.users().length,
-          itemBuilder: (BuildContext context, int index) {
-            SendbirdUser user = _sendbird.users()[index];
-            return Column(
-              children: [_row(context, user, _sendbird)],
-            );
-          }),
-      floatingActionButton: FloatingActionButton(
-          onPressed: () {
-            _displayDialog(context, _sendbird);
-          },
-          child: Icon(Icons.add)),
+    return FocusDetector(
+      key: _resumeDetectorKey,
+      onFocusGained: () {
+        timer = new Timer.periodic(Duration(seconds: 8), (timer) {
+          _sendbird.refreshUsers();
+        });
+      },
+      onFocusLost: () {
+        timer.cancel();
+      },
+      child: Scaffold(
+        appBar: AppBar(title: Text("Select a User")),
+        body: ListView.builder(
+            padding: const EdgeInsets.all(8),
+            itemCount: _sendbird.users().length,
+            itemBuilder: (BuildContext context, int index) {
+              SendbirdUser user = _sendbird.users()[index];
+              return Column(
+                children: [_row(context, user, _sendbird)],
+              );
+            }),
+        floatingActionButton: FloatingActionButton(
+            onPressed: () {
+              _displayDialog(context, _sendbird);
+            },
+            child: Icon(Icons.add)),
+      ),
     );
   }
 

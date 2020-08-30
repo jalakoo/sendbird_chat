@@ -11,8 +11,12 @@ class SendbirdChat {
   String _openChannelsApi;
   Map<String, String> _defaultHeaders;
   Rest _rest = Rest();
+  Timer timer;
 
-  SendbirdChat({String applicationId, String apiToken}) {
+  SendbirdChat({
+    String applicationId,
+    String apiToken,
+  }) {
     this._usersApi = "https://api-$applicationId.sendbird.com/v3/users/";
     this._openChannelsApi =
         "https://api-$applicationId.sendbird.com/v3/open_channels/";
@@ -25,7 +29,6 @@ class SendbirdChat {
   // USERS
   Future listUsers() async {
     var result = await this._rest.getFrom(this._usersApi, this._defaultHeaders);
-    print('sendbird_chat.dart: listUsers: result: $result');
     return result["users"];
   }
 
@@ -37,7 +40,6 @@ class SendbirdChat {
     };
     var result =
         await this._rest.postTo(this._usersApi, this._defaultHeaders, body);
-    print('sendbird_chat.dart: createUser: result: $result');
     return result;
   }
 
@@ -45,7 +47,6 @@ class SendbirdChat {
     String parentURL = this._usersApi;
     String finalURL = '$parentURL$userId';
     var result = await this._rest.delete(finalURL, this._defaultHeaders);
-    print('sendbird_chat.dart: deleteUser: url: $finalURL result: $result');
     return result;
   }
 
@@ -53,7 +54,6 @@ class SendbirdChat {
   Future<List> listOpenChannels() async {
     var result =
         await this._rest.getFrom(this._openChannelsApi, this._defaultHeaders);
-    print('sendbird_chat.dart: listOpenChannels: result: $result');
     return result["channels"];
   }
 
@@ -65,7 +65,6 @@ class SendbirdChat {
     var result = await this
         ._rest
         .postTo(this._openChannelsApi, this._defaultHeaders, body);
-    print('sendbird_chat.dart: createOpenChannel: result: $result');
     return result;
   }
 
@@ -73,8 +72,6 @@ class SendbirdChat {
     String parentURL = this._openChannelsApi;
     String finalURL = '$parentURL$channelUrl';
     var result = await this._rest.delete(finalURL, this._defaultHeaders);
-    print(
-        'sendbird_chat.dart: deleteOpenChannel: url: $finalURL result: $result');
     return result;
   }
 
@@ -83,8 +80,6 @@ class SendbirdChat {
     String now = DateTime.now().toUtc().millisecondsSinceEpoch.toString();
     String finalURL = '$parentURL$channelUrl/messages?message_ts=$now';
     var result = await this._rest.getFrom(finalURL, this._defaultHeaders);
-    print(
-        'sendbird_chat.dart: getOpenChannelMessages: url: $finalURL, result: $result');
     return result["messages"];
   }
 
@@ -98,7 +93,6 @@ class SendbirdChat {
       'message': message,
     };
     var result = await this._rest.postTo(finalURL, this._defaultHeaders, body);
-    print('sendbird_chat.dart: getOpenChannel: url: $finalURL result: $result');
     return result;
   }
 }

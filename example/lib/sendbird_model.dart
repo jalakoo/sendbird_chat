@@ -1,16 +1,16 @@
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:sendbird_chat/sendbird_chat.dart';
-import 'sendbird_user.dart';
 import 'sendbird_channel.dart';
 import 'sendbird_message.dart';
+import 'sendbird_user.dart';
 
 class SendbirdModel extends ChangeNotifier {
   SendbirdChat _chat;
   List<SendbirdUser> _users = new List<SendbirdUser>();
   List<SendbirdChannel> _openChannels = new List<SendbirdChannel>();
-  SendbirdUser _currentUser;
-  SendbirdChannel _currentChannel = new SendbirdChannel("", "", []);
+  SendbirdUser currentUser;
+  SendbirdChannel currentChannel = new SendbirdChannel("", "", []);
   List<SendbirdMessage> _currentMessages = new List<SendbirdMessage>();
 
   void init(String appId, String token) async {
@@ -20,8 +20,14 @@ class SendbirdModel extends ChangeNotifier {
   refreshUsers() async {
     // TODO: Error handling
     List currentUsers = await _chat.listUsers();
-    _users = [];
-    currentUsers.forEach((user) => _users.add(SendbirdUser.fromJson(user)));
+    List<SendbirdUser> newUsers = [];
+    currentUsers.forEach((user) => newUsers.add(SendbirdUser.fromJson(user)));
+    // TODO: Actually check content
+    if (newUsers.length == _users.length) {
+      print('sendbird_model.dart: refreshUsers: no change in users list.');
+      return;
+    }
+    _users = newUsers;
     notifyListeners();
   }
 
@@ -43,9 +49,15 @@ class SendbirdModel extends ChangeNotifier {
 
   refreshOpenChannels() async {
     List currentChannels = await _chat.listOpenChannels();
-    _openChannels = [];
+    List<SendbirdChannel> newChannels = [];
     currentChannels.forEach(
-        (channel) => _openChannels.add(SendbirdChannel.fromJson(channel)));
+        (channel) => newChannels.add(SendbirdChannel.fromJson(channel)));
+    // TODO: Actually check contents
+    if (newChannels.length == _openChannels.length) {
+      print('sendbird_model.dart: refreshOpenChannels: no change in channels');
+      return;
+    }
+    _openChannels = newChannels;
     notifyListeners();
   }
 
@@ -55,12 +67,12 @@ class SendbirdModel extends ChangeNotifier {
   }
 
   SendbirdChannel channel() {
-    return this._currentChannel;
+    return this.currentChannel;
   }
 
   void setChannel(SendbirdChannel channel) {
     this._currentMessages.clear();
-    this._currentChannel = channel;
+    this.currentChannel = channel;
   }
 
   Future createOpenChannel(String name, List<SendbirdUser> users) async {
@@ -78,7 +90,7 @@ class SendbirdModel extends ChangeNotifier {
 
   // MESSAGES
   Future<List<SendbirdMessage>> getOpenChannelMessages() async {
-    String channelUrl = this._currentChannel.channelUrl;
+    String channelUrl = this.currentChannel.channelUrl;
     List messages = await this._chat.getOpenChannelMessages(channelUrl);
     List<SendbirdMessage> result = new List<SendbirdMessage>();
     if (messages.length > 0) {
@@ -89,14 +101,22 @@ class SendbirdModel extends ChangeNotifier {
   }
 
   Future<void> refreshOpenChannelMessages() async {
-    this._currentMessages = await getOpenChannelMessages();
+    List<SendbirdMessage> newMessages = await getOpenChannelMessages();
+    // TODO; Actually check message contents
+    if (newMessages.length == this._currentMessages.length) {
+      // No change, ignore.
+      print(
+          'sendbird_model.dart: refreshOpenChannelMessages: no change in messages');
+      return;
+    }
+    this._currentMessages = newMessages;
     notifyListeners();
   }
 
   Future<void> sendOpenChannelMessage(String message) async {
     await this._chat.sendOpenChannelMessage(
-        channelUrl: this._currentChannel.channelUrl,
-        originUserId: this._currentUser.userId,
+        channelUrl: this.currentChannel.channelUrl,
+        originUserId: this.currentUser.userId,
         message: message);
     List<SendbirdMessage> messages = await getOpenChannelMessages();
     this._currentMessages.clear();
@@ -109,10 +129,10 @@ class SendbirdModel extends ChangeNotifier {
   }
 
   SendbirdUser user() {
-    return this._currentUser;
+    return this.currentUser;
   }
 
   void setUser(SendbirdUser user) {
-    this._currentUser = user;
+    this.currentUser = user;
   }
 }

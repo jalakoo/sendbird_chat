@@ -1,12 +1,16 @@
 import 'package:flutter/material.dart';
 import 'dart:async';
 
+import 'open_channel_selection.dart';
 import 'sendbird_model.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
 import 'user_selection.dart';
 import 'open_channel_selection.dart';
 import 'chat.dart';
+// import 'route_aware.dart';
+
+// final RouteObserver<PageRoute> routeObserver = RouteObserver<PageRoute>();
 
 Future main() async {
   await DotEnv().load('.env');
@@ -46,6 +50,15 @@ class _MyAppState extends State<MyApp> {
           ),
           debugShowCheckedModeBanner: false,
           home: UserSelectionPage(),
+          // navigatorObservers: [
+          //   routeObserver
+          // ],
+          // routes: {
+          //   '/home': (context) =>
+          //       RouteAwareWidget('/home', child: UserSelectionPage()),
+          //   '/open_channel': (context) => RouteAwareWidget('/open_channel',
+          //       child: OpenChannelSelectionPage()),
+          // }
           routes: <String, WidgetBuilder>{
             '/home': (context) => UserSelectionPage(),
             '/open_channel': (context) => OpenChannelSelectionPage(),

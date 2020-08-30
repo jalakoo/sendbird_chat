@@ -17,7 +17,7 @@ class Rest {
       print('rest.dart: postTo: $url: Non 200 response recevied: $json');
       return;
     }
-    print('rest.dart: postTo: $url successful: response: $response');
+    // print('rest.dart: postTo: $url successful: response: $response');
     String responseBody = response.body;
     return json.decode(responseBody);
   }
@@ -31,7 +31,7 @@ class Rest {
       print('rest.dart: getFrom: $url: Non 200 response: $code: body: $body');
       return {};
     }
-    print('rest.dart: getFrom: $url: successful.');
+    // print('rest.dart: getFrom: $url: successful.');
     return json.decode(body);
   }
 
